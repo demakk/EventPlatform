@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace EventPlatform.WebUI.Controllers;
+namespace EventPlatform.WebApi.Controllers;
 
 public class TestController : ControllerBase
 {

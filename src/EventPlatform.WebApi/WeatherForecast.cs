@@ -1,4 +1,4 @@
-namespace EventPlatform.WebUI;
+namespace EventPlatform.WebApi;
 
 public class WeatherForecast
 {
