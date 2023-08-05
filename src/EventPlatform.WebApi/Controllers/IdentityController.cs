@@ -2,6 +2,7 @@
 using EventPlatform.Application.Entities;
 using EventPlatform.WebApi.Contracts.IdentityContracts.Requests;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventPlatform.WebApi.Controllers;
@@ -16,6 +17,7 @@ public class IdentityController : BaseApiController
     }
 
     [HttpGet]
+    [Authorize]
     public IActionResult GetAllUsers()
     {
         
@@ -38,12 +40,12 @@ public class IdentityController : BaseApiController
         var command = new RegisterUserCommand
         {
             FullName = user.FullName, Email = user.Email,
-            Password = user.Password, Phone = user.Phone
+            Password = user.Password, Phone = user.Phone, UserName = user.Username
         };
         
         var response = await _mediator.Send(command);
 
-        return Ok();
+        return Ok(response);
     }
 
 }

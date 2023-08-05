@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using EventPlatform.Application.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EventPlatform.Infrastructure;
 
@@ -6,8 +7,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
-        services.AddScoped<DataContext>();
-
+        services.AddSingleton<IApplicationDbContext, DataContext>();
         return services;
     }
 }
