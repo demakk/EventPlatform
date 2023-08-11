@@ -19,8 +19,9 @@ public static class DependencyInjection
         IConfiguration config)
     {
         services.AddTransient<JwtSettings>();
-        services.AddMediatR(typeof(RegisterUserCommand));
         services.AddTransient<ITokenService, TokenService>();
+        services.AddMediatR(typeof(RegisterUserCommand));
+        
 
         services.Configure<JwtSettings>(config.GetSection(nameof(JwtSettings)));
         

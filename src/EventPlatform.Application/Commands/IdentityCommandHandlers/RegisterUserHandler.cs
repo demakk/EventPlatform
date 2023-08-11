@@ -5,16 +5,18 @@ using System.Text;
 using Dapper;
 using EventPlatform.Application.Commands.IdentityCommands;
 using EventPlatform.Application.Interfaces;
+using EventPlatform.Domain.Common;
 using EventPlatform.Domain.Models;
 using MediatR;
 using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace EventPlatform.Application.Commands.IdentityCommandHandlers;
 
-public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, string>
+public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, OperationResultT<string>>
 {
     private readonly IApplicationDbContext _ctx;
     private readonly ITokenService _tokenService;
+    private readonly OperationResultT<string> _result = new();
 
     public RegisterUserHandler(IApplicationDbContext ctx, ITokenService tokenService)
     {
@@ -22,13 +24,13 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, string>
         _tokenService = tokenService;
     }
 
-    public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<OperationResultT<string>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         try
         {
             var connection = _ctx.CreateConnection();
+            
             connection.Open();
-        
             using var hmac = new HMACSHA512();
             var obj = new User
             {
@@ -37,29 +39,36 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, string>
                 PasswordSalt = hmac.Key, CreatedAt = DateTime.Now, Phone = request.Phone
             };
 
+            if (await UserExists(connection, obj))
+            {
+                _result.AddError(new Error{Code = ErrorCode.UserAlreadyExists, ErrorMessage = "User already exists"});
+                return _result;
+            }
+            
             var sql = "INSERT INTO dbo.Users" +
                       " (Id, FullName, Email, UserName, PasswordHash, CreatedAt, PasswordSalt, Phone)" +
                       " VALUES" +
                       " (@Id, @FullName, @Email, @UserName, @PasswordHash, @CreatedAt, @PasswordSalt, @Phone)";
-        
+
             var res = await connection.ExecuteAsync(sql, obj);
-            return CreateToken(obj);
+            _result.SetTValue(CreateToken(obj));
+            return _result;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            throw;
+            _result.AddError(new Error { Code = ErrorCode.ApplicationError, ErrorMessage = e.Message }) ;
+            return _result;
         }
-        
     }
 
     private async Task<bool> UserExists(IDbConnection connection, User user)
     {
-        var sql = "SELECT * FROM Users WHERE Users.Id = @UserId";
-        var obj = new { UserId = user.Id };
+        var sql = "SELECT * FROM Users WHERE Users.Email = @Email";
+        var obj = new { Email = user.Email };
         
         var res = await connection.QueryAsync<User>(sql, obj);
-        return res.First() is null;
+        return res.FirstOrDefault() is not null;
     }
 
     private string CreateToken(User user)

@@ -20,8 +20,6 @@ public class IdentityController : BaseApiController
     [Authorize]
     public IActionResult GetAllUsers()
     {
-        
-        
         var users = new AppUserEntity[]
         {
             new() { Id = "1", UserName = "SomeUserName" },
@@ -31,8 +29,7 @@ public class IdentityController : BaseApiController
         
         return Ok(users);
     }
-
-
+    
     [HttpPost]
     [Route(ApiRoutes.Identity.Register)]
     public async Task<IActionResult> Register(UserRegistration user)
@@ -43,6 +40,17 @@ public class IdentityController : BaseApiController
             Password = user.Password, Phone = user.Phone, UserName = user.Username
         };
         
+        var response = await _mediator.Send(command);
+
+        return Ok(response);
+    }
+
+    [HttpPost]
+    [Route(ApiRoutes.Identity.Login)]
+    public async Task<IActionResult> Login(UserLogin userLogin)
+    {
+        var command = new LoginUserCommand { Email = userLogin.Email, Password = userLogin.Password };
+
         var response = await _mediator.Send(command);
 
         return Ok(response);

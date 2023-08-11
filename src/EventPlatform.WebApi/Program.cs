@@ -1,16 +1,21 @@
 using EventPlatform.Application;
 using EventPlatform.Infrastructure;
+using EventPlatform.WebApi.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ExceptionFilter>();
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructureServices();
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddSingleton<DataContext>();
+
 
 
 builder.Services.AddCors();
